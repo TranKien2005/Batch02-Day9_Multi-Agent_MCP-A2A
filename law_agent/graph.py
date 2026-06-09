@@ -41,9 +41,11 @@ class LawState(TypedDict):
     law_analysis: str
     needs_tax: bool
     needs_compliance: bool
+    needs_financial: bool
     # Annotated so parallel branches can both write without conflict
     tax_result: Annotated[str, _last_wins]
     compliance_result: Annotated[str, _last_wins]
+    financial_result: Annotated[str, _last_wins]
     final_answer: str
 
 
@@ -77,7 +79,7 @@ async def check_routing(state: LawState) -> dict:
     depth = state.get("delegation_depth", 0)
     if depth >= MAX_DELEGATION_DEPTH:
         logger.info("Max delegation depth reached (%d); skipping sub-agents", depth)
-        return {"needs_tax": False, "needs_compliance": False}
+        return {"needs_tax": False, "needs_compliance": False, "needs_financial": False}
 
     llm = get_llm()
     messages = [
@@ -111,8 +113,35 @@ async def check_routing(state: LawState) -> dict:
 
     needs_tax = bool(parsed.get("needs_tax", True))
     needs_compliance = bool(parsed.get("needs_compliance", True))
-    logger.info("Routing decision: needs_tax=%s needs_compliance=%s", needs_tax, needs_compliance)
-    return {"needs_tax": needs_tax, "needs_compliance": needs_compliance}
+    question_lower = state["question"].lower()
+    needs_financial = any(
+        kw in question_lower
+        for kw in [
+            "damage",
+            "damages",
+            "financial",
+            "revenue",
+            "loss",
+            "losses",
+            "cash flow",
+            "cost",
+            "costs",
+            "liability exposure",
+            "business impact",
+            "$",
+        ]
+    )
+    logger.info(
+        "Routing decision: needs_tax=%s needs_compliance=%s needs_financial=%s",
+        needs_tax,
+        needs_compliance,
+        needs_financial,
+    )
+    return {
+        "needs_tax": needs_tax,
+        "needs_compliance": needs_compliance,
+        "needs_financial": needs_financial,
+    }
 
 
 def route_to_subagents(state: LawState) -> list[Send]:
@@ -126,6 +155,8 @@ def route_to_subagents(state: LawState) -> list[Send]:
         sends.append(Send("call_tax", state))
     if state.get("needs_compliance"):
         sends.append(Send("call_compliance", state))
+    if state.get("needs_financial"):
+        sends.append(Send("call_financial", state))
     if not sends:
         # No sub-agents needed — go straight to aggregation
         sends.append(Send("aggregate", state))
@@ -174,6 +205,27 @@ async def call_compliance(state: LawState) -> dict:
         return {"compliance_result": f"[Compliance analysis unavailable: {exc}]"}
 
 
+async def call_financial(state: LawState) -> dict:
+    """Delegate to the Financial Agent via A2A."""
+    from common.a2a_client import delegate
+    from common.registry_client import discover
+
+    try:
+        endpoint = await discover("financial_question")
+        result = await delegate(
+            endpoint=endpoint,
+            question=state["question"],
+            context_id=state["context_id"],
+            trace_id=state["trace_id"],
+            depth=state.get("delegation_depth", 0) + 1,
+        )
+        logger.info("Financial Agent returned %d chars", len(result))
+        return {"financial_result": result}
+    except Exception as exc:
+        logger.exception("call_financial failed: %s", exc)
+        return {"financial_result": f"[Financial analysis unavailable: {exc}]"}
+
+
 async def aggregate(state: LawState) -> dict:
     """Combine law_analysis, tax_result, and compliance_result into a final answer."""
     llm = get_llm()
@@ -185,6 +237,8 @@ async def aggregate(state: LawState) -> dict:
         sections.append(f"## Tax Analysis\n{state['tax_result']}")
     if state.get("compliance_result"):
         sections.append(f"## Regulatory Compliance Analysis\n{state['compliance_result']}")
+    if state.get("financial_result"):
+        sections.append(f"## Financial Risk Analysis\n{state['financial_result']}")
 
     combined = "\n\n---\n\n".join(sections)
 
@@ -216,6 +270,7 @@ def create_graph():
     graph.add_node("check_routing", check_routing)
     graph.add_node("call_tax", call_tax)
     graph.add_node("call_compliance", call_compliance)
+    graph.add_node("call_financial", call_financial)
     graph.add_node("aggregate", aggregate)
 
     graph.set_entry_point("analyze_law")
@@ -226,11 +281,12 @@ def create_graph():
     graph.add_conditional_edges(
         "check_routing",
         route_to_subagents,
-        ["call_tax", "call_compliance", "aggregate"],
+        ["call_tax", "call_compliance", "call_financial", "aggregate"],
     )
 
     graph.add_edge("call_tax", "aggregate")
     graph.add_edge("call_compliance", "aggregate")
+    graph.add_edge("call_financial", "aggregate")
     graph.add_edge("aggregate", END)
 
     return graph.compile()

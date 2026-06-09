@@ -175,8 +175,9 @@ def check_compliance_requirements(industry: str, company_size: str) -> str:
 TOOLS = [search_legal_database, calculate_penalty, check_compliance_requirements]
 
 QUESTION = (
-    "A tech startup with $5M revenue was caught sharing user data without consent "
-    "and failed to pay taxes on overseas revenue. What are all the legal consequences?"
+    "Một tech startup có doanh thu 5 triệu USD bị phát hiện chia sẻ user data "
+    "mà không có consent, đồng thời không nộp taxes cho overseas revenue. "
+    "Tất cả hậu quả pháp lý có thể là gì?"
 )
 
 SYSTEM_PROMPT = (

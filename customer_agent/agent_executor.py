@@ -16,6 +16,9 @@ from customer_agent.graph import build_graph
 
 logger = logging.getLogger(__name__)
 
+MAX_MEMORY_TURNS = 4
+_conversation_memory: dict[str, list[tuple[str, str]]] = {}
+
 
 class CustomerAgentExecutor(AgentExecutor):
     """Bridges A2A RequestContext to the Customer LangGraph agent."""
@@ -40,6 +43,21 @@ class CustomerAgentExecutor(AgentExecutor):
         await updater.start_work()
 
         try:
+            history = _conversation_memory.get(context_id, [])
+            if history:
+                history_lines = []
+                for idx, (past_question, past_answer) in enumerate(history, start=1):
+                    history_lines.append(f"Turn {idx} user: {past_question}")
+                    history_lines.append(f"Turn {idx} assistant: {past_answer[:800]}")
+                question_for_graph = (
+                    "Conversation history:\n"
+                    + "\n".join(history_lines)
+                    + "\n\nCurrent user question:\n"
+                    + question
+                )
+            else:
+                question_for_graph = question
+
             # Build a per-request graph so the tool closure captures this request's IDs
             graph = build_graph(
                 trace_id=trace_id,
@@ -48,7 +66,7 @@ class CustomerAgentExecutor(AgentExecutor):
             )
 
             result = await graph.ainvoke(
-                {"messages": [HumanMessage(content=question)]},
+                {"messages": [HumanMessage(content=question_for_graph)]},
                 config={"configurable": {"thread_id": context_id}},
             )
 
@@ -73,6 +91,10 @@ class CustomerAgentExecutor(AgentExecutor):
 
             if not answer:
                 answer = "I was unable to process your legal question at this time."
+
+            memory = _conversation_memory.setdefault(context_id, [])
+            memory.append((question, answer))
+            del memory[:-MAX_MEMORY_TURNS]
 
             await updater.add_artifact(
                 parts=[Part(root=TextPart(text=answer))],

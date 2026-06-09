@@ -16,7 +16,7 @@ CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://localhost:10100")
 
 QUESTION = (
     "If a company breaks a contract and avoids taxes, "
-    "what are the legal and regulatory consequences?"
+    "what are the legal, regulatory, and financial damages consequences for revenue and business risk?"
 )
 
 
