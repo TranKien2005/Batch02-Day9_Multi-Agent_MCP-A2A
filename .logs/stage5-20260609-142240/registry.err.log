@@ -1,0 +1,26 @@
+2026-06-09 14:22:41,472 [registry] INFO Starting Registry on port 10000
+INFO:     Started server process [30752]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+2026-06-09 14:22:45,530 [registry] INFO Registered agent 'tax-agent' at http://localhost:10102 (tasks=['tax_question'])
+2026-06-09 14:22:45,534 [registry] INFO Registered agent 'compliance-agent' at http://localhost:10103 (tasks=['compliance_question'])
+2026-06-09 14:22:52,056 [registry] INFO Registered agent 'customer-agent' at http://localhost:10100 (tasks=[])
+2026-06-09 14:22:56,423 [registry] INFO Registered agent 'law-agent' at http://localhost:10101 (tasks=['legal_question'])
+2026-06-09 14:23:51,454 [registry] INFO Discovered agent 'law-agent' for task 'legal_question'
+2026-06-09 14:24:45,716 [registry] INFO Discovered agent 'compliance-agent' for task 'compliance_question'
+2026-06-09 14:24:45,746 [registry] INFO Discovered agent 'tax-agent' for task 'tax_question'
+2026-06-09 14:40:11,103 [registry] INFO Discovered agent 'tax-agent' for task 'tax_question'
+2026-06-09 14:40:11,952 [registry] INFO Discovered agent 'law-agent' for task 'legal_question'
+2026-06-09 14:40:12,346 [registry] INFO Discovered agent 'compliance-agent' for task 'compliance_question'
+2026-06-09 14:43:24,552 [registry] INFO Discovered agent 'law-agent' for task 'legal_question'
+2026-06-09 14:43:53,857 [registry] INFO Discovered agent 'compliance-agent' for task 'compliance_question'
+2026-06-09 14:43:53,869 [registry] INFO Discovered agent 'tax-agent' for task 'tax_question'
+2026-06-09 16:09:35,920 [registry] INFO Registered agent 'tax-agent' at http://localhost:10102 (tasks=['tax_question'])
+2026-06-09 16:09:35,931 [registry] INFO Registered agent 'compliance-agent' at http://localhost:10103 (tasks=['compliance_question'])
+2026-06-09 16:09:38,675 [registry] INFO Registered agent 'financial-agent' at http://localhost:10104 (tasks=['financial_question'])
+2026-06-09 16:09:38,685 [registry] INFO Registered agent 'law-agent' at http://localhost:10101 (tasks=['legal_question'])
+2026-06-09 16:09:41,598 [registry] INFO Registered agent 'customer-agent' at http://localhost:10100 (tasks=[])
+2026-06-09 16:12:35,709 [registry] INFO Discovered agent 'law-agent' for task 'legal_question'
+2026-06-09 16:12:52,889 [registry] INFO Discovered agent 'compliance-agent' for task 'compliance_question'
+2026-06-09 16:12:52,899 [registry] INFO Discovered agent 'tax-agent' for task 'tax_question'

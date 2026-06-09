@@ -1,0 +1,20 @@
+2026-06-09 14:22:45,537 [compliance_agent] INFO HTTP Request: POST http://localhost:10000/register "HTTP/1.1 200 OK"
+2026-06-09 14:22:45,541 [compliance_agent] INFO Registered with registry (attempt 1)
+2026-06-09 14:22:45,547 [compliance_agent] INFO Compliance Agent listening on port 10103
+INFO:     Started server process [31396]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:10103 (Press CTRL+C to quit)
+2026-06-09 14:24:56,242 [compliance_agent] WARNING Deprecated agent card endpoint '/.well-known/agent.json' accessed. Please use '/.well-known/agent-card.json' instead. This endpoint will be removed in a future version.
+2026-06-09 14:24:56,327 [compliance_agent] INFO ComplianceAgent executing | task=5ca8ce13-8bf9-4905-b1b3-1a29f3a7102f context=8807d9fd-3668-421d-9df7-a02d2cffc33b trace=5becdb13-03f8-47d1-882a-b7526c1b7d5e depth=2
+2026-06-09 14:25:18,458 [compliance_agent] INFO Task not found or task_id not set. Creating new task for event (task_id: 5ca8ce13-8bf9-4905-b1b3-1a29f3a7102f, context_id: 8807d9fd-3668-421d-9df7-a02d2cffc33b).
+2026-06-09 14:25:21,193 [compliance_agent] INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-09 14:40:40,845 [compliance_agent] WARNING Deprecated agent card endpoint '/.well-known/agent.json' accessed. Please use '/.well-known/agent-card.json' instead. This endpoint will be removed in a future version.
+2026-06-09 14:43:54,304 [compliance_agent] WARNING Deprecated agent card endpoint '/.well-known/agent.json' accessed. Please use '/.well-known/agent-card.json' instead. This endpoint will be removed in a future version.
+2026-06-09 14:43:54,308 [compliance_agent] INFO ComplianceAgent executing | task=d4d60538-3557-424f-8470-f2cd99babdef context=d04f659a-497a-44dc-8075-9e43efab3d39 trace=0680167a-8583-477b-a8ca-1a565475716a depth=2
+2026-06-09 14:43:54,311 [compliance_agent] INFO Task not found or task_id not set. Creating new task for event (task_id: d4d60538-3557-424f-8470-f2cd99babdef, context_id: d04f659a-497a-44dc-8075-9e43efab3d39).
+2026-06-09 14:43:56,033 [compliance_agent] INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-09 16:12:53,419 [compliance_agent] WARNING Deprecated agent card endpoint '/.well-known/agent.json' accessed. Please use '/.well-known/agent-card.json' instead. This endpoint will be removed in a future version.
+2026-06-09 16:12:53,436 [compliance_agent] INFO ComplianceAgent executing | task=b4956dda-299d-40b8-95e5-8c6ec6f4ccb6 context=c525216d-edb6-4647-b07b-7986f9b920c6 trace=7abb6c9d-2bad-4cfa-a1d0-adadf12f6ff6 depth=2
+2026-06-09 16:12:53,443 [compliance_agent] INFO Task not found or task_id not set. Creating new task for event (task_id: b4956dda-299d-40b8-95e5-8c6ec6f4ccb6, context_id: c525216d-edb6-4647-b07b-7986f9b920c6).
+2026-06-09 16:12:55,444 [compliance_agent] INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
