@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage 5 A2A Agent Dashboard</title>
+  <style>
+    :root {
+      --page: #eef2f7;
+      --panel: #ffffff;
+      --ink: #111827;
+      --muted: #667085;
+      --line: #d0d7e2;
+      --blue: #1f5eff;
+      --blue-soft: #eaf0ff;
+      --green: #0e7c66;
+      --green-soft: #e8f7f2;
+      --amber-soft: #fff4df;
+      --amber-line: #f4d39b;
+      --shadow: 0 10px 28px rgba(17, 24, 39, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Segoe UI, Inter, Arial, sans-serif;
+    }
+    header {
+      background: #111827;
+      color: #fff;
+      padding: 24px 32px;
+    }
+    header h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    header p { margin: 0; color: #cbd5e1; max-width: 980px; line-height: 1.5; }
+    main { padding: 24px 32px 36px; display: grid; gap: 20px; }
+    .top-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 20px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .panel h2 { margin: 0; font-size: 18px; }
+    .panel-body { padding: 18px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, select, input {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 9px 11px;
+      font-size: 14px;
+    }
+    button.primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .agent {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 12px;
+      min-height: 118px;
+      background: #fff;
+      transition: .18s ease;
+      position: relative;
+    }
+    .agent:before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+    .agent.active { border-color: var(--blue); background: var(--blue-soft); transform: translateY(-2px); }
+    .agent.active:before { background: var(--blue); }
+    .agent.done { border-color: #a7dbc9; background: var(--green-soft); }
+    .agent.done:before { background: var(--green); }
+    .agent strong { display: block; font-size: 14px; margin-bottom: 6px; padding-right: 16px; }
+    .agent code { display: inline-block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .agent span { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .sequence { display: grid; gap: 8px; counter-reset: step; }
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px 11px 44px;
+      position: relative;
+      background: #fff;
+      color: var(--muted);
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+    }
+    .step:before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      color: #374151;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .step.current { color: var(--ink); border-color: var(--blue); background: var(--blue-soft); font-weight: 600; }
+    .step.current:before { background: var(--blue); color: white; }
+    .step.done { color: #34524b; border-color: #b9dfd2; background: var(--green-soft); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .metric { border: 1px solid var(--line); border-radius: 9px; padding: 12px; background: #fff; }
+    .metric label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .metric b { font-size: 24px; }
+    .latency-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .latency-grid label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .latency-grid input { width: 100%; }
+    .result-box {
+      border-radius: 9px;
+      padding: 14px;
+      margin-top: 12px;
+      background: var(--amber-soft);
+      border: 1px solid var(--amber-line);
+      color: #5f3b00;
+      line-height: 1.45;
+    }
+    .commands {
+      background: #0b1220;
+      color: #e5e7eb;
+      border-radius: 9px;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .status-line { color: var(--muted); margin-top: 10px; min-height: 22px; }
+    @media (max-width: 1100px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .agent-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 720px) {
+      main { padding: 16px; }
+      header { padding: 20px 16px; }
+      .agent-grid, .metrics, .latency-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Stage 5 A2A Agent Dashboard</h1>
+    <p>Interactive demo for distributed A2A workflow, Financial Agent, memory, monitoring, and latency reduction with CUSTOMER_FAST_ROUTE.</p>
+  </header>
+
+  <main>
+    <section class="top-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Agent Interaction Flow</h2>
+          <div class="controls">
+            <select id="mode">
+              <option value="normal">Normal route</option>
+              <option value="fast">Fast route</option>
+            </select>
+            <button class="primary" id="play">Play</button>
+            <button id="reset">Reset</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="agent-grid">
+            <div class="agent" id="client"><strong>Client</strong><code>test_client.py</code><span>Sends the legal and financial-risk question.</span></div>
+            <div class="agent" id="customer"><strong>Customer Agent</strong><code>:10100</code><span>Entry point with context memory.</span></div>
+            <div class="agent" id="registry"><strong>Registry</strong><code>:10000</code><span>Dynamic discovery for agent tasks.</span></div>
+            <div class="agent" id="law"><strong>Law Agent</strong><code>:10101</code><span>LangGraph routing and aggregation.</span></div>
+            <div class="agent" id="tax"><strong>Tax Agent</strong><code>:10102</code><span>IRS, tax evasion, penalties.</span></div>
+            <div class="agent" id="compliance"><strong>Compliance Agent</strong><code>:10103</code><span>SEC, SOX, AML, FCPA.</span></div>
+            <div class="agent" id="financial"><strong>Financial Agent</strong><code>:10104</code><span>Damages, revenue, business risk.</span></div>
+          </div>
+          <div class="sequence" id="sequence"></div>
+          <div class="status-line" id="status">Ready.</div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-head"><h2>Latency Comparison</h2></div>
+        <div class="panel-body">
+          <div class="metrics">
+            <div class="metric"><label>Mode</label><b id="metric-mode">normal</b></div>
+            <div class="metric"><label>LLM hop saved</label><b id="metric-hop">0</b></div>
+            <div class="metric"><label>Specialists</label><b>3</b></div>
+          </div>
+          <div class="latency-grid">
+            <div>
+              <label for="baseline">Baseline avg seconds</label>
+              <input id="baseline" type="number" min="0" step="0.01" placeholder="e.g. 68.40">
+            </div>
+            <div>
+              <label for="optimized">Fast-route avg seconds</label>
+              <input id="optimized" type="number" min="0" step="0.01" placeholder="e.g. 51.20">
+            </div>
+          </div>
+          <button class="primary" id="calc">Calculate Difference</button>
+          <div class="controls" style="margin-top:10px">
+            <button id="measure-baseline">Measure Baseline</button>
+            <button id="measure-optimized">Measure Fast Route</button>
+            <button id="load-metrics">Load Metrics</button>
+          </div>
+          <div class="result-box" id="latency-result">Enter measured averages from measure_latency.py to compute the improvement.</div>
+          <div class="result-box" id="metrics-result" style="display:none"></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Demo Commands For The Report</h2></div>
+      <div class="panel-body">
+        <pre class="commands"># Browser dashboard with real measurement API
+.\.venv\Scripts\python.exe demo_server.py
+# Open http://localhost:8080
+
+# Baseline
+Remove-Item Env:CUSTOMER_FAST_ROUTE -ErrorAction SilentlyContinue
+.\start_all.ps1
+$env:LATENCY_RUNS="3"
+.\.venv\Scripts\python.exe measure_latency.py
+
+# Optimized
+# Stop services with Ctrl+C, then:
+$env:CUSTOMER_FAST_ROUTE="true"
+.\start_all.ps1
+$env:LATENCY_RUNS="3"
+.\.venv\Scripts\python.exe measure_latency.py
+
+# Metrics
+.\.venv\Scripts\python.exe collect_metrics.py
+
+# Memory demo
+.\.venv\Scripts\python.exe advanced_features_test.py</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const normalSteps = [
+      ['client', 'Client sends an A2A request to Customer Agent.'],
+      ['customer', 'Customer Agent uses its ReAct entry-point decision.'],
+      ['registry', 'Customer discovers legal_question from Registry.'],
+      ['law', 'Law Agent receives the delegated legal task.'],
+      ['registry', 'Law Agent discovers tax, compliance, and financial specialists.'],
+      ['tax', 'Tax Agent analyzes IRS and tax-evasion exposure.'],
+      ['compliance', 'Compliance Agent analyzes regulatory exposure.'],
+      ['financial', 'Financial Agent analyzes damages and business risk.'],
+      ['law', 'Law Agent aggregates all specialist analyses.'],
+      ['customer', 'Customer Agent stores the turn in memory and returns the answer.']
+    ];
+    const fastSteps = normalSteps.filter((_, index) => index !== 1);
+    const sequence = document.getElementById('sequence');
+    const status = document.getElementById('status');
+    const mode = document.getElementById('mode');
+    const metricMode = document.getElementById('metric-mode');
+    const metricHop = document.getElementById('metric-hop');
+
+    function steps() { return mode.value === 'fast' ? fastSteps : normalSteps; }
+    function reset() {
+      document.querySelectorAll('.agent').forEach(el => el.classList.remove('active', 'done'));
+      metricMode.textContent = mode.value;
+      metricHop.textContent = mode.value === 'fast' ? '1' : '0';
+      sequence.innerHTML = steps().map((s, i) => `<div class="step" id="step-${i}">${s[1]}</div>`).join('');
+      status.textContent = 'Ready.';
+    }
+    async function play() {
+      reset();
+      const currentSteps = steps();
+      for (let i = 0; i < currentSteps.length; i++) {
+        const [agentId, text] = currentSteps[i];
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('current'));
+        const stepEl = document.getElementById(`step-${i}`);
+        const agentEl = document.getElementById(agentId);
+        stepEl.classList.add('current');
+        agentEl.classList.add('active');
+        status.textContent = text;
+        await new Promise(resolve => setTimeout(resolve, 760));
+        agentEl.classList.remove('active');
+        agentEl.classList.add('done');
+        stepEl.classList.remove('current');
+        stepEl.classList.add('done');
+      }
+      status.textContent = 'Flow complete.';
+    }
+    function calcLatency() {
+      const base = Number(document.getElementById('baseline').value);
+      const fast = Number(document.getElementById('optimized').value);
+      const out = document.getElementById('latency-result');
+      if (!base || !fast || base <= 0 || fast <= 0) {
+        out.textContent = 'Enter both measured averages to compute the latency difference.';
+        return;
+      }
+      const delta = base - fast;
+      const pct = (delta / base) * 100;
+      const direction = delta >= 0 ? 'reduced' : 'increased';
+      out.innerHTML = `Baseline: <b>${base.toFixed(2)}s</b><br>Fast route: <b>${fast.toFixed(2)}s</b><br>Latency ${direction} by <b>${Math.abs(delta).toFixed(2)}s</b> (${Math.abs(pct).toFixed(1)}%).`;
+    }
+    async function measure(slot) {
+      const out = document.getElementById('latency-result');
+      out.textContent = `Measuring ${slot}. Keep Stage 5 services running; this may take 30-90 seconds...`;
+      try {
+        const response = await fetch(`/api/latency?slot=${slot}`);
+        if (!response.ok) throw new Error(await response.text());
+        const data = await response.json();
+        const target = slot === 'optimized' ? 'optimized' : 'baseline';
+        document.getElementById(target).value = data.seconds;
+        out.innerHTML = `${slot} measured: <b>${data.seconds.toFixed(2)}s</b><br>Response chars: <b>${data.response_chars}</b><br><br><b>Preview</b><br>${escapeHtml(data.preview)}`;
+        calcLatency();
+      } catch (error) {
+        out.textContent = `Measurement failed: ${error}`;
+      }
+    }
+    async function loadMetrics() {
+      const out = document.getElementById('metrics-result');
+      out.style.display = 'block';
+      out.textContent = 'Loading metrics...';
+      try {
+        const response = await fetch('/api/metrics');
+        if (!response.ok) throw new Error(await response.text());
+        const data = await response.json();
+        const lines = Object.entries(data).map(([name, value]) => {
+          const firstLines = String(value.metrics).split('\n').slice(0, 5).join('\n');
+          return `<b>${name}</b> ${value.ok ? 'OK' : 'ERROR'}<pre>${escapeHtml(firstLines)}</pre>`;
+        });
+        out.innerHTML = lines.join('');
+      } catch (error) {
+        out.textContent = `Metrics failed: ${error}`;
+      }
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
+    }
+    document.getElementById('play').addEventListener('click', play);
+    document.getElementById('reset').addEventListener('click', reset);
+    document.getElementById('calc').addEventListener('click', calcLatency);
+    document.getElementById('measure-baseline').addEventListener('click', () => measure('baseline'));
+    document.getElementById('measure-optimized').addEventListener('click', () => measure('optimized'));
+    document.getElementById('load-metrics').addEventListener('click', loadMetrics);
+    mode.addEventListener('change', reset);
+    reset();
+  </script>
+</body>
+</html>

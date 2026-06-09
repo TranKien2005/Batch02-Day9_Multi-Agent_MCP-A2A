@@ -1,9 +1,13 @@
 # Advanced Features
 
-This repository was extended with two optional advanced features for the codelab bonus task:
+This repository was extended with multiple optional advanced features for the codelab bonus task:
 
 1. A distributed `financial_agent` A2A service.
 2. Simple conversation memory in the Customer Agent.
+3. Optional API-key authentication for A2A endpoints.
+4. Retry with exponential backoff for A2A delegation and Registry calls.
+5. Prometheus-style monitoring endpoints.
+6. Latency measurement and fast-route optimization.
 
 ## 1. Financial Agent
 
@@ -19,6 +23,7 @@ The Financial Agent adds a new specialist domain to Stage 5. It analyzes financi
 | `financial_agent/graph.py` | Defines the Financial Agent's LangGraph/ReAct graph and finance-focused system prompt. |
 | `financial_agent/agent_executor.py` | Bridges incoming A2A requests to the Financial Agent graph and returns `financial_analysis`. |
 | `financial_agent/__init__.py` | Makes `financial_agent` a Python package. |
+| `demo_server.py` | Serves the HTML dashboard and exposes APIs to measure real Stage 5 latency from the browser. |
 
 ### Integration Points
 
@@ -83,6 +88,7 @@ Run after Stage 5 services are started:
 
 ```powershell
 .\.venv\Scripts\python.exe advanced_features_test.py
+.\.venv\Scripts\python.exe demo_server.py
 ```
 
 ## How To Run
@@ -129,4 +135,8 @@ The Registry should contain five agents:
 
 - The Financial Agent is a real A2A service, not only an in-process Stage 4 node.
 - Memory is local to the running Customer Agent process and resets when the process restarts.
-- MCP is still not implemented; this advanced feature extends the A2A multi-agent system and local LangGraph workflows.
+- Authentication is optional. Set `A2A_API_KEY` to require `X-A2A-API-Key` on A2A request endpoints.
+- Retry settings are configurable through `A2A_RETRY_ATTEMPTS`, `A2A_RETRY_BASE_DELAY`, `REGISTRY_RETRY_ATTEMPTS`, and `REGISTRY_RETRY_BASE_DELAY`.
+- Metrics are available at `/metrics` on Registry and all agents.
+- Latency can be measured with `measure_latency.py`; `CUSTOMER_FAST_ROUTE=true` demonstrates reduced latency by removing one Customer Agent LLM routing hop.
+- MCP is still not implemented; these advanced features extend the A2A multi-agent system and local LangGraph workflows.

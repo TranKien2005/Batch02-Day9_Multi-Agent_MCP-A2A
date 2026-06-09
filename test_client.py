@@ -10,6 +10,8 @@ import sys
 import httpx
 from dotenv import load_dotenv
 
+from common.security import auth_headers
+
 load_dotenv()
 
 CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://localhost:10100")
@@ -25,7 +27,7 @@ async def main() -> None:
     print(f"Question: {QUESTION}")
     print("-" * 60)
 
-    async with httpx.AsyncClient(timeout=300.0) as http_client:
+    async with httpx.AsyncClient(timeout=300.0, headers=auth_headers()) as http_client:
         # Resolve agent card
         card_url = f"{CUSTOMER_AGENT_URL}/.well-known/agent.json"
         try:

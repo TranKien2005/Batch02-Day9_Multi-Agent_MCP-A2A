@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from uuid import uuid4
 
 from langchain_core.messages import HumanMessage
@@ -58,36 +59,49 @@ class CustomerAgentExecutor(AgentExecutor):
             else:
                 question_for_graph = question
 
-            # Build a per-request graph so the tool closure captures this request's IDs
-            graph = build_graph(
-                trace_id=trace_id,
-                context_id=context_id,
-                depth=depth,
-            )
+            if os.getenv("CUSTOMER_FAST_ROUTE", "").lower() in {"1", "true", "yes"}:
+                from common.a2a_client import delegate
+                from common.registry_client import discover
 
-            result = await graph.ainvoke(
-                {"messages": [HumanMessage(content=question_for_graph)]},
-                config={"configurable": {"thread_id": context_id}},
-            )
+                endpoint = await discover("legal_question")
+                answer = await delegate(
+                    endpoint=endpoint,
+                    question=question_for_graph,
+                    context_id=context_id,
+                    trace_id=trace_id,
+                    depth=depth + 1,
+                )
+            else:
+                # Build a per-request graph so the tool closure captures this request's IDs
+                graph = build_graph(
+                    trace_id=trace_id,
+                    context_id=context_id,
+                    depth=depth,
+                )
 
-            # Extract the last AI message from the result
-            answer = ""
-            for msg in reversed(result.get("messages", [])):
-                if hasattr(msg, "content") and msg.content:
-                    if not isinstance(msg, HumanMessage):
-                        # Skip ToolMessages, only want final AIMessage
-                        from langchain_core.messages import AIMessage
-                        if isinstance(msg, AIMessage):
-                            answer = msg.content
-                            break
+                result = await graph.ainvoke(
+                    {"messages": [HumanMessage(content=question_for_graph)]},
+                    config={"configurable": {"thread_id": context_id}},
+                )
 
-            if not answer:
-                # Fallback: any non-human message content
+                # Extract the last AI message from the result
+                answer = ""
                 for msg in reversed(result.get("messages", [])):
-                    content = getattr(msg, "content", "")
-                    if content and not isinstance(msg, HumanMessage):
-                        answer = content
-                        break
+                    if hasattr(msg, "content") and msg.content:
+                        if not isinstance(msg, HumanMessage):
+                            # Skip ToolMessages, only want final AIMessage
+                            from langchain_core.messages import AIMessage
+                            if isinstance(msg, AIMessage):
+                                answer = msg.content
+                                break
+
+                if not answer:
+                    # Fallback: any non-human message content
+                    for msg in reversed(result.get("messages", [])):
+                        content = getattr(msg, "content", "")
+                        if content and not isinstance(msg, HumanMessage):
+                            answer = content
+                            break
 
             if not answer:
                 answer = "I was unable to process your legal question at this time."

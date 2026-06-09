@@ -16,6 +16,8 @@ from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 
 from common.registry_client import register
+from common.observability import add_metrics
+from common.security import add_api_key_middleware
 from financial_agent.agent_executor import FinancialAgentExecutor
 
 logging.basicConfig(
@@ -90,6 +92,8 @@ async def main() -> None:
         http_handler=request_handler,
     )
     app = app_builder.build()
+    add_metrics(app, "financial-agent")
+    add_api_key_middleware(app)
 
     config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_level="info")
     server = uvicorn.Server(config)
